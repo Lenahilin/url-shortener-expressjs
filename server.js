@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
-const cors = require('cors');
+var morgan = require('morgan')
+
 const dns = require('dns');
 
 const app = express();
@@ -11,6 +12,7 @@ var bodyParser = require('body-parser')
 
 const port = process.env.PORT || 3000;
 
+app.use(morgan('combined'))
 app.use('/public', express.static(`${process.cwd()}/public`));
 app.use('/api/shorturl/new', bodyParser.urlencoded({extended: false})); 
 
@@ -44,7 +46,7 @@ const createRecord = (url, done) => {
 };
 
 const findOrigin = (key, done) => {
-  Alias.find({key: key}, function(err, data) {
+  Alias.find({key: key}, (err, data) => {
     if (err) return console.error(err);
     done(null, data);
   });
@@ -60,18 +62,20 @@ app.post('/api/shorturl/new', (req, res) => {
       res.json({error: 'invalid url'});
     } else {
         createRecord(req.body.url, (err, data) => {
-          console.log('data:', data);
           if (err) return next(err);
+          console.log('data:', data);
+          res.json({ original_url : req.body.url, short_url : data.key}) 
         }); 
-        res.json({ original_url : req.body.url, short_url : data.key}) 
     }
   });
   
   /* return 301 redirect by the key*/
   app.get('/api/shorturl/:key', (req, res) => {
-    var key = req.params.key; 
+    var key = req.params.key;
+    console.log('key =', key);
     findOrigin((key, (err, data) => {
-
+      if (err) return next(err);
+      res.json(data);
     }))
 
 
