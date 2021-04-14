@@ -29,16 +29,17 @@ const aliasSchema = new mongoose.Schema({
   origin: {
     type: String,
     required: true
-    },
-  key: mongoose.ObjectId
+    }
+  // key: mongoose.ObjectId
 });
 
 const Alias = mongoose.model('Alias', aliasSchema);
 
 const createRecord = (url, done) => {
   var record = new Alias({
-                    origin: url, 
-                    key: new mongoose.Types.ObjectId()});
+                    origin: url
+                    // key: new mongoose.Types.ObjectId()
+                  });
   record.save((err, data) => {
     if (err) return console.error(err);
     done(null, data);
@@ -46,7 +47,7 @@ const createRecord = (url, done) => {
 };
 
 const findOrigin = (key, done) => {
-  Alias.find({key: key}, (err, data) => {
+  Alias.findById(key, (err, data) => {
     if (err) return console.error(err);
     done(null, data);
   });
@@ -64,23 +65,24 @@ app.post('/api/shorturl/new', (req, res) => {
         createRecord(req.body.url, (err, data) => {
           if (err) return next(err);
           console.log('data:', data);
-          res.json({ original_url : req.body.url, short_url : data.key}) 
+          res.json({ original_url : req.body.url, short_url : data._id});
         }); 
     }
   });
+});
   
-  /* return 301 redirect by the key*/
-  app.get('/api/shorturl/:key', (req, res) => {
-    var key = req.params.key;
-    console.log('key =', key);
-    findOrigin((key, (err, data) => {
-      if (err) return next(err);
-      res.json(data);
-    }))
+/* return 301 redirect by the key*/
+app.get('/api/shorturl/:key', (req, res) => {
+  var key = req.params.key;
+  console.log('key =', key);
+  findOrigin(key, (err, data) => {
+    if (err) return next(err);
+    res.json(data);
+    // res.redirect(data.origin);
+  });
 
 
     // TODO: 404 if key not found in the db 
-  })
 });
 
 
