@@ -30,7 +30,6 @@ const aliasSchema = new mongoose.Schema({
     type: String,
     required: true
     }
-  // key: mongoose.ObjectId
 });
 
 const Alias = mongoose.model('Alias', aliasSchema);
@@ -71,17 +70,15 @@ app.post('/api/shorturl/new', (req, res) => {
   });
 });
   
-/* return 301 redirect by the key*/
+/* return 302 redirect */
 app.get('/api/shorturl/:key', (req, res) => {
-  var key = req.params.key;
-  console.log('key =', key);
-  findOrigin(key, (err, data) => {
+  findOrigin(req.params.key, (err, data) => {
     if (err) return next(err);
-    res.json(data);
+    // res.json(data.origin);
     // res.redirect(data.origin);
+    if (data.origin.startsWith('http')) res.redirect(data.origin);
+    else res.redirect('http://' + data.origin)
   });
-
-
     // TODO: 404 if key not found in the db 
 });
 
