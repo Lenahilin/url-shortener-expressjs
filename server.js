@@ -48,7 +48,7 @@ const createRecord = (url, done) => {
 const findOrigin = (key, done) => {
   Alias.findById(key, (err, data) => {
     if (err) return console.error(err);
-    done(null, data);
+    done(null, data); // TODO: what is the right place to handle cases when no data is found (data == null)?
   });
 };
 
@@ -70,16 +70,17 @@ app.post('/api/shorturl/new', (req, res) => {
   });
 });
   
-/* return 302 redirect */
+/* return 302 redirect or 404 not found*/
 app.get('/api/shorturl/:key', (req, res) => {
   findOrigin(req.params.key, (err, data) => {
-    if (err) return next(err);
-    // res.json(data.origin);
-    // res.redirect(data.origin);
-    if (data.origin.startsWith('http')) res.redirect(data.origin);
+    if (err) {
+      console.error(err);
+      return next(err);
+    }
+    if (!data) res.status(404).send('There is no record, please try another alias');
+    else if (data.origin.startsWith('http')) res.redirect(data.origin);
     else res.redirect('http://' + data.origin)
   });
-    // TODO: 404 if key not found in the db 
 });
 
 
